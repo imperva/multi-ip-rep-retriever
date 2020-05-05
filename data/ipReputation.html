@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html> <title> Imperva IP Reputation </title>
+<head>
+<style> 
+    tr:nth-child(even) {background: #E0E0E0}
+    table, th {
+    border: 1px solid black;
+}
+td {
+    border: 1px solid black;
+    padding:5px;
+}
+body {
+    font-family:OpenSans;
+}
+</style> 
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script><script type="text/javascript">
+
+function reqListener () {
+  document.getElementById("results").innerHTML =
+      this.responseText;
+  document.getElementById("submitBtn").disabled = false;
+}
+   
+function getRequest(queryList)
+ {
+    var url = "http://localhost:$portNum?ip=" + queryList;
+    var oReq = new XMLHttpRequest();
+    oReq.addEventListener("load", reqListener);
+
+    oReq.open("GET", url);
+    oReq.send();
+}
+
+function getIpInfo()
+{ 
+    document.getElementById("submitBtn").disabled = true;
+    the_text = document.getElementById("txtarea_ip").value;
+    validateIpList(the_text);
+}
+   
+function validateIpList(theIps)
+{
+    var isValidIp = false;
+    var queryList;
+    var ipList = theIps.split(/[ ,]+/);
+    if (ipList.length > $ipListLengthLimit)
+    {
+        alert("Number of IPs to inspect is greater than the limit of $ipListLengthLimit")
+        exit();
+    }
+    else
+    {
+        for(j=0; j<ipList.length; j++)
+        {
+            isValidIp = validateIp(ipList[j])
+            if (isValidIp == false)
+                break;
+            //Build query string
+            if (j == 0)
+                queryList = ipList[j];
+            else
+                queryList+= "&ip=" + ipList[j];
+        }
+    }
+   
+    if (!isValidIp)
+        alert('Invalid IP "' + ipList[j] + '"');
+    else
+    {
+        getRequest(queryList);
+    }
+ }
+ 
+function validateIp(ipAdd)
+{
+    var isValidId = false;
+    var ipParts = ipAdd.split(".");
+    var ipPartInt;
+    //Check that 4 . delimited strings that are digits only
+    if(ipParts.length == 4)
+    {
+        for(var i=0;i<4;i++){ 
+            if (((ipParts[i].length >= 1) && (ipParts[i].length <= 3)) && 
+                (parseInt(ipParts[i]) <= 255) && (/^[0-9]*$/.test(ipParts[i])))
+            { /* digits only, not more than 255 and with first digit not 0 means valid*/
+                if (i == 0 && ipParts[i] == 0)
+                    break;
+            }
+            else
+                break;
+        }
+    }
+    if(i==4)
+        isValidId=true; 
+        
+    return (isValidId);
+}
+ </script></head>
+<body>
+
+<h1>Imperva IP Reputation</h1>
+<h2>IP Addresses</h2>
+<textarea id="txtarea_ip" rows="4" cols="50"></textarea>
+<p>Enter up to $ipListLengthLimit IP addresses separated by spaces or commas</p>
+<button onclick="javascript:getIpInfo();" style="margin: 5px 0px;" id="submitBtn">Check IP</button>
+
+<h2>Results</h2>
+<div id="results">
+</div>
+
+</body>
+</html>
