@@ -3,7 +3,7 @@ var async = require('async');
 var settings = require('../settings.js');
 
 
-var criticalErrorSortVal = 0;
+var criticalErrorSortVal = 1000;
 var numConcurrentConnections = 15;
 
 function validateIp(ipAdd)
@@ -92,7 +92,7 @@ function getIpReputationList(urlData, ipInput, informCaller, res, outSideCb)
 	}
 	else
 	{
-		ipReputationOutput.push({"ipAddress": 0, "status": "error",  "sortOrder": criticalErrorSortVal, "errMessage": "Empty List"});
+		ipReputationOutput.push({"ipAddress": 0, "status": "error",  "riskScore": criticalErrorSortVal, "errMessage": "Empty List"});
 		informCaller(ipReputationOutput, res, outSideCb);
 	}
 }
@@ -100,7 +100,7 @@ function getIpReputationList(urlData, ipInput, informCaller, res, outSideCb)
 
 function getIpReputation(urlData, ipAddress, ipReputationOutput, informCaller)
 {
-	var sortOrder = criticalErrorSortVal;
+	var riskScore = criticalErrorSortVal;
 	var urlString = 'https://api.imperva.com/ip-reputation/v1/reputation?api_key=' + urlData.api_key + 
 		'&api_id=' + urlData.api_id + '&ip=' + ipAddress;
 // form data
@@ -141,31 +141,31 @@ function getIpReputation(urlData, ipAddress, ipReputationOutput, informCaller)
 			if (response.statusCode == 401)
 			{
 				//Currently 2 cases
-				if (response.body.includes('<html>')) /*Returned when number of calls exceed allowed */
+				if (response.body.includes('<html>')) /*Returned when number of calls exceeds allowed */
 				{	
-					sortOrder = 10;
+					riskScore = 0;
 					errMessage = "Exceeded number of requests, please try again later";
 				}
 				else if (response.body.includes('errMsg')) //Most of the time wrong credentials
 				{
 					var jResponse = JSON.parse(response.body);
-					sortOrder = criticalErrorSortVal;
+					riskScore = criticalErrorSortVal;
 					errMessage = jResponse.errMsg;
 				}
 			}
 			else if (response.statusCode == 403)
 			{
-				sortOrder = criticalErrorSortVal;
+				riskScore = criticalErrorSortVal;
 				errMessage = "Missing credentials";			
 			}
-			ipReputationOutput.push({"ipAddress": ipAddress, "status": "error",  "sortOrder": sortOrder, "errMessage": errMessage});
+			ipReputationOutput.push({"ipAddress": ipAddress, "status": "error",  "riskScore": riskScore, "errMessage": errMessage});
 			informCaller();
 		}
 	})
 	.catch(function (err) {
 		// Deal with the error
 		console.log("Exception getting account ip-reputation info " + err);
-		ipReputationOutput.push({"ipAddress": ipAddress, "status": "error",  "sortOrder": criticalErrorSortVal, "errMessage": errMessage});
+		ipReputationOutput.push({"ipAddress": ipAddress, "status": "error",  "riskScore": criticalErrorSortVal, "errMessage": errMessage});
 		informCaller();
 	})
 }
@@ -173,29 +173,18 @@ function getIpReputation(urlData, ipAddress, ipReputationOutput, informCaller)
 function setIpReputationInfo(payload, ipReputationOutput)
 {
 	var jPayload = JSON.parse(payload);
-	var riskScore = "NA";
-	var riskDesc = "IP not found";
-	var sortOrder;
+	var riskSeverity = "NA";
+	var riskDesc = "No recorded risk";
+	var riskScore = 1;
 
 	if (jPayload.risk)
 	{
-		riskScore = jPayload.risk.risk_score;
+		riskSeverity = jPayload.risk.risk_score;
 		riskDesc = jPayload.risk.risk_description;
+		riskScore = jPayload.risk.risk_score_number;
 	}
 
-	if (riskScore == 'CRITICAL')
-		sortOrder = 1;
-	else if (riskScore == 'HIGH')
-		sortOrder = 2;
-	else if (riskScore == 'MEDIUM')
-		sortOrder = 3;
-	else if (riskScore == 'LOW')
-	sortOrder = 5;
-	else if (riskScore == 'NA')
-		sortOrder = 5;
-
-
-	ipReputationOutput.push({"ipAddress":  jPayload.ip, "status": "ok", "sortOrder": sortOrder, "riskScore": riskScore, "riskDesc": riskDesc, 
+	ipReputationOutput.push({"ipAddress":  jPayload.ip, "status": "ok", "riskScore": riskScore, "riskSeverity": riskSeverity, "riskDesc": riskDesc, 
 								"country": jPayload.origin.country, "city" : jPayload.origin.city,
 								"orgName" : jPayload.asn.organization_name, "orgNumber" : jPayload.asn.organization_number,
 								"knownToUse" : jPayload.known_to_use, "knownFor" : jPayload.known_for});

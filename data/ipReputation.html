@@ -28,13 +28,18 @@ function getRequest(queryList)
     var oReq = new XMLHttpRequest();
     oReq.addEventListener("load", reqListener);
 
+    //Disable submit button and inform user that data is fetched.
+    document.getElementById("submitBtn").disabled = true;
+    document.getElementById("results").innerHTML =
+      "Fetching data...";
+
+    //Get data
     oReq.open("GET", url);
     oReq.send();
 }
 
 function getIpInfo()
 { 
-    document.getElementById("submitBtn").disabled = true;
     the_text = document.getElementById("txtarea_ip").value;
     validateIpList(the_text);
 }
@@ -65,7 +70,10 @@ function validateIpList(theIps)
     }
    
     if (!isValidIp)
-        alert('Invalid IP "' + ipList[j] + '"');
+    {
+        alert('Invalid IP"' + ipList[j] + '"');
+        exit();
+    }
     else
     {
         getRequest(queryList);

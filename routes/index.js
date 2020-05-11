@@ -89,46 +89,60 @@ function getIpReputationHtmlTable(ipReputationOutput)
 {
   var urlPrefix = 'https://my.imperva.com/ip-reputation/ui/dashboard/?accountId='+ settings.accountId + '&ip=';
   var body = '<table border="1">\n';
-  body += '<tr><th align="left">IP Address</th><th align="left">Risk</th><th align="left">Risk Description</th>' +
+  body += '<tr><th align="left">IP Address</th><th align="left">Risk*</th><th align="left">Risk Description</th>' +
           '<th align="left">ASN</th><th align="left">Organization Name</th><th align="left">Country</th><th align="left">City</th>' +
           '<th align="left">Known to use</th><th align="left">Known for</th></tr>\n';
 
-  //Sort according to sortOrder and IP
+  //Sort according to riskScore and IP
   ipReputationOutput.sort(function (a,b) {
-    if ((a.sortOrder < b.sortOrder) || 
-        (a.sortOrder == b.sortOrder) && (a.ipAddress < b.ipAddress))
-        return (-1);
-    if ((a.sortOrder > b.sortOrder) || 
-        (a.sortOrdere == b.sortOrdere) && (a.ipAddress > b.ipAddress))
-        return (1);  
+    if ((a.riskScore < b.riskScore) || 
+        (a.riskScore == b.riskScore) && (a.ipAddress > b.ipAddress))
+        return (1);
+    if ((a.riskScore > b.riskScore) || 
+        (a.riskScoree == b.riskScoree) && (a.ipAddress < b.ipAddress))
+        return (-1);  
     });
 
-  if (ipReputationOutput[0].sortOrder == ipReputation.criticalErrorSortVal)
+  if (ipReputationOutput[0].riskScore == ipReputation.criticalErrorSortVal)
     body = '<h2 style="color:red">' + ipReputationOutput[0].errMessage + '</h2>';
   else
   {
     for (var i = 0; i < ipReputationOutput.length; i++)
     {
-      var riskScoreStr; 
+      var riskSeverityStr;
+      var riskStr;
       var backGroundColor;
     
       
       if (ipReputationOutput[i].status == "ok")
       {
         backGroundColor = 'gray';
-        if (ipReputationOutput[i].riskScore == 'CRITICAL')
+        riskStr = ipReputationOutput[i].riskSeverity;
+        
+        if (ipReputationOutput[i].riskSeverity == 'CRITICAL')
+        {
           backGroundColor = 'DarkRed';
-        else if (ipReputationOutput[i].riskScore == 'HIGH')
+          riskStr = ipReputationOutput[i].riskSeverity + ' (' + ipReputationOutput[i].riskScore + ')';
+        }
+        else if (ipReputationOutput[i].riskSeverity == 'HIGH')
+        {
           backGroundColor = 'red';
-        else if (ipReputationOutput[i].riskScore == 'MEDIUM')
+          riskStr = ipReputationOutput[i].riskSeverity + ' (' + ipReputationOutput[i].riskScore + ')';
+        }
+        else if (ipReputationOutput[i].riskSeverity == 'MEDIUM')
+        {
           backGroundColor = 'orange';
-        else if (ipReputationOutput[i].riskScore == 'LOW')
+          riskStr = ipReputationOutput[i].riskSeverity + ' (' + ipReputationOutput[i].riskScore + ')';
+        }
+        else if (ipReputationOutput[i].riskSeverity == 'LOW')
+        {
           backGroundColor = 'green';
+          riskStr = ipReputationOutput[i].riskSeverity + ' (' + ipReputationOutput[i].riskScore + ')';
+        }
         
-        riskScoreStr = '</td><td align="left"style="background-color:' + backGroundColor + ';color:white;">' + ipReputationOutput[i].riskScore + '</td>'
-        
+        riskSeverityStr = '</td><td align="left"style="background-color:' + backGroundColor + ';color:white;">' + riskStr + '</td>';
         body += '<tr><td align="left"><a href="'+ urlPrefix + ipReputationOutput[i].ipAddress + '">' + ipReputationOutput[i].ipAddress +  '</td>' + 
-          riskScoreStr +
+          riskSeverityStr +
           '<td align="left">' + ipReputationOutput[i].riskDesc +  '</td><td align="left">' + ipReputationOutput[i].orgNumber + '</td>' +
           '<td align="left">' + ipReputationOutput[i].orgName +  '</td><td align="left">' + ipReputationOutput[i].country + '</td>' +
           '<td align="left">' + ipReputationOutput[i].city +  '</td><td align="left">' + ipReputationOutput[i].knownToUse + '</td>' +
@@ -143,6 +157,7 @@ function getIpReputationHtmlTable(ipReputationOutput)
       }
     }
     body += '</table>\n';
+    body += '<p style="font-size: 14px;">*Based on Imperva-wide customer statistics for the previous 14 days</p>\n';
   }
   return (body);
 }
