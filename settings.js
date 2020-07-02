@@ -5,7 +5,7 @@ module.exports = Object.freeze({
 	apiKey: "",  // Your api key - Mandatory
 
 // Advanced configuration
-    listeningPort: 3000,
+    listeningPort: 4000,
     ipListLengthLimit: 10, //This is used to limit number of IPs in html. Based on server limitation
 	printDebugInfo: false,
 
