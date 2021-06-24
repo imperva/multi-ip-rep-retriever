@@ -101,8 +101,7 @@ function getIpReputationList(urlData, ipInput, informCaller, res, outSideCb)
 function getIpReputation(urlData, ipAddress, ipReputationOutput, informCaller)
 {
 	var riskScore = criticalErrorSortVal;
-	var urlString = 'https://api.imperva.com/ip-reputation/v1/reputation?api_key=' + urlData.api_key + 
-		'&api_id=' + urlData.api_id + '&ip=' + ipAddress;
+	var urlString = 'https://api.imperva.com/ip-reputation/v1/reputation?ip=' + ipAddress;
 // form data
 	var options = {
 		method: 'GET',
@@ -111,15 +110,13 @@ function getIpReputation(urlData, ipAddress, ipReputationOutput, informCaller)
 		host: 'my.incapsula.com',
 		resolveWithFullResponse: true, //Set to get HTTP error code
 		simple: false,				   //Set to hand HTTP error code
-		headers: {
-			'Content-Type': 'application/x-www-form-urlencoded'
-				},
 		path: '/api.imperva.com/analytics/v1/incidents',
 		headers: {
-			'Content-Type': 'application/x-www-form-urlencoded'
+			'Content-Type': 'application/x-www-form-urlencoded',
+            'x-API-Id' : urlData.api_id, //Imperva Authorization
+            'x-API-Key': urlData.api_key //Imperva Authorization
 		},
 	}
-
 	request(options)
 	.then(function (response) {	
 		 var errMessage = response.body;

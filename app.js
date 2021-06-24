@@ -17,7 +17,7 @@ app.use('/', getRequest);
 
 
 /* Version control */
-var appVersion = "1.0.1";
+var appVersion = "1.0.2";
 var requiredSettingsVersion = "1.0";
 if (requiredSettingsVersion != settings.version)
 {
